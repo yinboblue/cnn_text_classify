@@ -68,10 +68,10 @@ else:
     y_test = [1, 0]
 
 # Get Embedding vector x_test
-sentences, max_document_length = data_helpers.padding_sentences(x_raw, '<PADDING>', padding_sentence_length = max_document_length)
-x_test = np.array(word2vec_helpers.embedding_sentences(sentences, file_to_load = trained_word2vec_model_file))
+sentences, max_document_length = data_helpers.padding_sentences(x_raw, '<PADDING>',
+                                                                padding_sentence_length=max_document_length)
+x_test = np.array(word2vec_helpers.embedding_sentences(sentences, file_to_load=trained_word2vec_model_file))
 print("x_test.shape = {}".format(x_test.shape))
-
 
 # Evaluation
 # ==================================================
@@ -80,8 +80,8 @@ checkpoint_file = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
 graph = tf.Graph()
 with graph.as_default():
     session_conf = tf.ConfigProto(
-      allow_soft_placement=FLAGS.allow_soft_placement,
-      log_device_placement=FLAGS.log_device_placement)
+        allow_soft_placement=FLAGS.allow_soft_placement,
+        log_device_placement=FLAGS.log_device_placement)
     sess = tf.Session(config=session_conf)
     with sess.as_default():
         # Load the saved meta graph and restore variables
@@ -110,15 +110,15 @@ with graph.as_default():
 if y_test is not None:
     correct_predictions = float(sum(all_predictions == y_test))
     print("Total number of test examples: {}".format(len(y_test)))
-    print("Accuracy: {:g}".format(correct_predictions/float(len(y_test))))
+    print("Accuracy: {:g}".format(correct_predictions / float(len(y_test))))
 
 # Save the evaluation to a csv
 out_path = os.path.join(FLAGS.checkpoint_dir, "..", "prediction.txt")
 print("Saving evaluation to {0}".format(out_path))
-with open(out_path,'w',encoding='utf-8') as fw:
-    text=list(open(FLAGS.input_text_file, encoding='utf-8').readlines())
-    text=[line.strip('\n') for line in text]
-    for i,prediction in enumerate(all_predictions):
-        fw.write(str(int(prediction))+' '+text[i]+'\n')
+with open(out_path, 'w', encoding='utf-8') as fw:
+    text = list(open(FLAGS.input_text_file, encoding='utf-8').readlines())
+    text = [line.strip('\n') for line in text]
+    for i, prediction in enumerate(all_predictions):
+        fw.write(str(int(prediction)) + ' ' + text[i] + '\n')
 
 fw.close()

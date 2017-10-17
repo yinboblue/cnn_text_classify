@@ -14,10 +14,20 @@ from text_cnn import TextCNN
 
 # Data loading parameters
 tf.flags.DEFINE_float("dev_sample_percentage", .1, "Percentage of the training data to use for validation")
-#tf.flags.DEFINE_string("positive_data_file", "./data/rt-polaritydata/rt-polarity.pos", "Data source for the positive data.")
-#tf.flags.DEFINE_string("negative_data_file", "./data/rt-polaritydata/rt-polarity.neg", "Data source for the negative data.")
-tf.flags.DEFINE_string("positive_data_file", "./data/ham_5000.utf8", "Data source for the positive data.")
-tf.flags.DEFINE_string("negative_data_file", "./data/spam_5000.utf8", "Data source for the negative data.")
+
+# tf.flags.DEFINE_string("positive_data_file",
+#                        "./data/rt-polaritydata/rt-polarity.pos",
+#                        "Data source for the positive data.")
+# tf.flags.DEFINE_string("negative_data_file",
+#                        "./data/rt-polaritydata/rt-polarity.neg",
+#                        "Data source for the negative data.")
+tf.flags.DEFINE_string("positive_data_file",
+                       "./data/ham_5000.utf8",
+                       "Data source for the positive data.")
+tf.flags.DEFINE_string("negative_data_file",
+                       "./data/spam_5000.utf8",
+                       "Data source for the negative data.")
+
 tf.flags.DEFINE_integer("num_labels", 2, "Number of labels for data. (default: 2)")
 
 # Model Hyperparameters
@@ -64,13 +74,14 @@ x_text, y = data_helpers.load_positive_negative_data_files(FLAGS.positive_data_f
 
 # Get embedding vector
 sentences, max_document_length = data_helpers.padding_sentences(x_text, '<PADDING>')
-x = np.array(word2vec_helpers.embedding_sentences(sentences, embedding_size = FLAGS.embedding_dim, file_to_save = os.path.join(out_dir, 'trained_word2vec.model')))
+x = np.array(word2vec_helpers.embedding_sentences(sentences, embedding_size=FLAGS.embedding_dim,
+                                                  file_to_save=os.path.join(out_dir, 'trained_word2vec.model')))
 print("x.shape = {}".format(x.shape))
 print("y.shape = {}".format(y.shape))
 
 # Save params
 training_params_file = os.path.join(out_dir, 'training_params.pickle')
-params = {'num_labels' : FLAGS.num_labels, 'max_document_length' : max_document_length}
+params = {'num_labels': FLAGS.num_labels, 'max_document_length': max_document_length}
 data_helpers.saveDict(params, training_params_file)
 
 # Shuffle data randomly
@@ -88,26 +99,25 @@ print("Train/Dev split: {:d}/{:d}".format(len(y_train), len(y_dev)))
 
 # Training
 # =======================================================
-localtime = time.asctime( time.localtime(time.time()) )
+localtime = time.asctime(time.localtime(time.time()))
 print('开始时间:'),
 print(localtime)
 
-
 with tf.Graph().as_default():
     session_conf = tf.ConfigProto(
-        allow_soft_placement = FLAGS.allow_soft_placement,
-	log_device_placement = FLAGS.log_device_placement)
-    sess = tf.Session(config = session_conf)
+        allow_soft_placement=FLAGS.allow_soft_placement,
+        log_device_placement=FLAGS.log_device_placement)
+    sess = tf.Session(config=session_conf)
     with sess.as_default():
         cnn = TextCNN(
-	    sequence_length = x_train.shape[1],
-	    num_classes = y_train.shape[1],
-	    embedding_size = FLAGS.embedding_dim,
-	    filter_sizes = list(map(int, FLAGS.filter_sizes.split(","))),
-	    num_filters = FLAGS.num_filters,
-	    l2_reg_lambda = FLAGS.l2_reg_lambda)
+            sequence_length=x_train.shape[1],
+            num_classes=y_train.shape[1],
+            embedding_size=FLAGS.embedding_dim,
+            filter_sizes=list(map(int, FLAGS.filter_sizes.split(","))),
+            num_filters=FLAGS.num_filters,
+            l2_reg_lambda=FLAGS.l2_reg_lambda)
 
-	    # Define Training procedure
+        # Define Training procedure
         global_step = tf.Variable(0, name="global_step", trainable=False)
         optimizer = tf.train.AdamOptimizer(1e-3)
         grads_and_vars = optimizer.compute_gradients(cnn.loss)
@@ -150,14 +160,15 @@ with tf.Graph().as_default():
         # Initialize all variables
         sess.run(tf.global_variables_initializer())
 
+
         def train_step(x_batch, y_batch):
             """
             A single training step
             """
             feed_dict = {
-              cnn.input_x: x_batch,
-              cnn.input_y: y_batch,
-              cnn.dropout_keep_prob: FLAGS.dropout_keep_prob
+                cnn.input_x: x_batch,
+                cnn.input_y: y_batch,
+                cnn.dropout_keep_prob: FLAGS.dropout_keep_prob
             }
             _, step, summaries, loss, accuracy = sess.run(
                 [train_op, global_step, train_summary_op, cnn.loss, cnn.accuracy],
@@ -166,14 +177,15 @@ with tf.Graph().as_default():
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
 
+
         def dev_step(x_batch, y_batch, writer=None):
             """
             Evaluates model on a dev set
             """
             feed_dict = {
-              cnn.input_x: x_batch,
-              cnn.input_y: y_batch,
-              cnn.dropout_keep_prob: 1.0
+                cnn.input_x: x_batch,
+                cnn.input_y: y_batch,
+                cnn.dropout_keep_prob: 1.0
             }
             step, summaries, loss, accuracy = sess.run(
                 [global_step, dev_summary_op, cnn.loss, cnn.accuracy],
@@ -182,6 +194,7 @@ with tf.Graph().as_default():
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
                 writer.add_summary(summaries, step)
+
 
         # Generate batches
         batches = data_helpers.batch_iter(
@@ -200,8 +213,7 @@ with tf.Graph().as_default():
                 path = saver.save(sess, checkpoint_prefix, global_step=current_step)
                 print("Saved model checkpoint to {}\n".format(path))
 
-
 sess.close()
-localtime = time.asctime( time.localtime(time.time()) )
+localtime = time.asctime(time.localtime(time.time()))
 print('结束时间:'),
 print(localtime)

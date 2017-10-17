@@ -12,8 +12,10 @@ import pickle
 
 def load_data_and_labels(input_text_file, input_label_file, num_labels):
     x_text = read_and_clean_zh_file(input_text_file)
-    y = None if not os.path.exists(input_label_file) else [int(item) for item in list(open(input_label_file, "r").readlines())]
-    return (x_text, y)
+    y = None if not os.path.exists(input_label_file) else [int(item) for item in
+                                                           list(open(input_label_file, "r").readlines())]
+    return x_text, y
+
 
 # 处理数据
 def load_positive_negative_data_files(positive_data_file, negative_data_file):
@@ -43,7 +45,7 @@ def padding_sentences(input_sentences, padding_token, padding_sentence_length=No
             sentence = sentence[:max_sentence_length]
         else:
             sentence.extend([padding_token] * (max_sentence_length - len(sentence)))
-    return (sentences, max_sentence_length)
+    return sentences, max_sentence_length
 
 
 def batch_iter(data, batch_size, num_epochs, shuffle=True):
@@ -79,7 +81,7 @@ def read_and_clean_zh_file(input_file, output_cleaned_file=None):
     lines = list(open(input_file, encoding='utf-8').readlines())
     lines = [clean_str(seperate_line(line)) for line in lines]
     if output_cleaned_file is not None:
-        with open(output_cleaned_file, 'w',encoding='utf-8') as f:
+        with open(output_cleaned_file, 'w', encoding='utf-8') as f:
             for line in lines:
                 f.write((line + '\n'))
     return lines
